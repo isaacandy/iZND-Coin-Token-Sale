@@ -1,0 +1,211 @@
+
+<!DOCTYPE html>
+<html >
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Token sale page">
+
+    <title>Token sale</title>
+   
+    <script>
+        var test = true; // False if contracts are on Mainnet
+        var contractAddressSale = '0x433d8dcB14A1a0c486DfbF63d5085810B00271c0';
+        var contractAddressToken = '0x5Bf2a793967C0b334CEf9712eddb3cE49B40D676';
+    </script>
+    
+    <style>
+        
+        body {font-family: Arial, "Helvetica Neue", Helvetica, sans-serif; color: #FFFFFF; background-color: #000000; font-size: 16px; font-weight: 400;}
+
+        h1 { font-size: 24px; font-weight: 700;}
+        h2 { font-size: 22px; font-weight: 500;}
+
+        .small {
+            font-size: 12px;
+        }
+
+        .err {
+             color: red;
+        }
+        
+        .green {
+             color: green;
+        }
+        
+        .blue {
+             color: blue;
+        }
+
+        * {
+          box-sizing: border-box;
+        }
+        
+        a {
+          color: #FFFFFF;
+          text-decoration: none;
+        }
+        
+        a:hover {
+          color: #C0C0C0;
+        }
+        
+        .clickable {
+            cursor: pointer;
+        }
+        
+        .clickable:hover {
+            color: #C0C0C0;
+        }
+        
+        button {
+          background-color: #283747;
+          border: none;
+          border-radius: 2px;
+          color: white;
+          padding: 5px 20px;
+          text-align: center;
+          text-decoration: none;
+          font-size: 16px;
+          display: inline-block;
+          margin: 4px 2px;
+          cursor: pointer;
+        }
+        
+        button:hover {
+          background-color: #008000;
+        }
+        
+        button[disabled] {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+        
+        hr {
+            margin: 20px;
+            border: 0;
+            border-top: 1px dashed;
+        }
+        
+        input {
+          text-align: center;
+          font-size: 18px;
+          background-color: #000000;
+          color: #FFFFFF;
+          border:1px solid;
+          max-width: 100%;
+        }
+    </style>
+    
+</head>
+
+<body>
+    
+    <div style="text-align: center">
+        <button id="connect" style="font-size: 12px">Connect</button> <button class="switch" id="addTestMATIC" style="font-size: 12px;">Polygon (MATIC) Mumbai Testnet</button>
+        <span id="nometamask" class="err" style="display: none">Please install Metamask first...</span>
+        <div class="network small"><span id="curnet"><span class="err">Please use DApp browser/extension (e.g. <a target="_blank" href="https://metamask.io">Metamask</a>)</span></span> <span id="myAddr"></span>
+        <span id="referred" style="display:none"><br>Referrer: <span id="referrer"></span></span></div>
+    </div>
+    
+    <div style="text-align: center">
+        <h1>Token info</h1>
+        <h2><span id="tokenName">iZND Coin</span> (<span class="tokenSymbol">iZND</span>)</h2>
+        <p><a target="_blank" href="https://mumbai.polygonscan.com/token/0x5Bf2a793967C0b334CEf9712eddb3cE49B40D676" id="tokenAddress">0x5Bf2a793967C0b334CEf9712eddb3cE49B40D676</a></p>
+        <!-- Reserved in case you want to show decimals and total supply: Decimals <span id="#tokenDecimals"></span> Total supply <span id="#tokenSupply"></span>-->
+        <p><button id="addToken" style="text-align: center">Add to Metamask</button> <button id="copyToken" style="text-align: center">Copy address</button></p>
+    </div>
+    
+    <hr>
+    
+    <div style="text-align: center">
+        <h1>Token sale status</h1>
+        <h1>
+            <span id="finished" style="display:none" class="status green">Finished</span>
+            <span id="unlocked" style="display:none" class="status green"><br>Claim unlocked</span>
+            <span id="locked" style="display:none" class="status err"><br>Claim locked</span>
+            <span id="addtokens" style="display:none" class="status err"><br>Ask token sale admin to add tokens to the sale contract!</span>
+            <span id="active" style="display:none" class="status green">Active</span>
+            <span id="paused" style="display:none" class="status err">Paused</span>
+            <span id="upcoming" style="display:none" class="status blue">Upcoming</span>
+            <span id="upcomingtimer" style="display:none" class="status blue"><br>begins in <span id="starttimer"></span></span>
+            <span id="activetimer" style="display:none" class="status green"><br>ends in <span id="endtimer"></span></span>
+        </h1>
+        <p><progress id="progress" value="0" max="100" style="width: 70%"></progress></p>
+        <p>Raised: <span id="raised"></span> of <span class="hardcap"></span> MATIC</p>
+        <p>Tokens sold: <span id="sold"></span> of <span class="saleqty"></span> <span class="tokenSymbol">iZND</span></p>
+        <p>Remaining: <span id="toraise"></span> MATIC (~ <span id="unsold"></span> <span class="tokenSymbol">iZND</span>)</p>
+    </div>
+    <hr>
+    
+    <div style="text-align: center">
+        <h1>Buy tokens</h1>
+        <p>1 MATIC = <span class="rate"></span> <span class="tokenSymbol">iZND</span></p>
+        <p><input type="number" id="buyAmount" value="0" min="0"> MATIC</p>
+        <p>You get: <span id="get">0</span> <span class="tokenSymbol">iZND</span></p>
+        <p><button id="buyBtn" style="text-align: center">Buy</button></p>
+        <p>You have contributed <span id="mySpendings">?</span> of <span class="max">?</span> MATIC maximum purchase limit, 
+        can spend max. <span id="myRemaining">?</span> MATIC more</p>
+    </div>
+    <hr>
+    
+    <div style="text-align: center">
+        <h1>Token sale information</h1>
+        <p>Hardcap: <span class="hardcap"></span> MATIC (~ <span class="saleqty"></span> <span class="tokenSymbol">iZND</span>)</p>
+        <p>Rate: 1 MATIC = <span class="rate"></span> <span class="tokenSymbol">iZND</span> (~ <span class="price"></span> MATIC/<span class="tokenSymbol">iZND</span>)</p>
+        <p>Purchase limit: <span class="max"></span></p>
+        <p>Start: <span id="start"></span></p>
+        <p>End: <span id="end"></span></p>
+        <p>Duration: <span id="duration"></span></p>
+        <p>Tokens claim: <span id="claimtime"></span> 
+        <span id="canhcdelay" style="display:none" class="claimstatus">Can be claimed after hardcap is reached + <span id="canhcdelayh"></span></span>
+        <span id="canhc" style="display:none" class="claimstatus">Can be claimed immediately after hardcap is reached</span>
+        <span id="cannothc" style="display:none" class="claimstatus">Can be claimed only when unlock time comes</span>
+        </p>
+
+    </div>
+    <hr>
+    
+    <div style="text-align: center">
+        <h1>My tokens</h1>
+        <p>In my wallet: <span id="myTokens"></span></p>
+        <p>Unclaimed: <span id="myUnclaimed"></span></p>
+        <div id="claimstatus">
+            <span id="claimok" style="display:none" class="claimstatus green">Tokens are unlocked and can be claimed</span>
+            <span id="claimnotok" style="display:none" class="claimstatus err">Tokens are locked</span>
+        </div>
+        <p><button id="claim">Claim my tokens</button></p>
+    </div>
+    <hr>
+    
+    <div style="text-align: center">
+        <h1>Sale contract</h1>
+        <p>You can also buy tokens by sending MATIC directly from your wallet to this contract<br>
+        (please increase gas limit to 200,000 or even more for tokens with special functions like autoLP, swaps, etc.)</p>
+        <p><a href="https://mumbai.polygonscan.com/address/0x433d8dcB14A1a0c486DfbF63d5085810B00271c0" target="_blank" id="saleAddress">0x433d8dcB14A1a0c486DfbF63d5085810B00271c0</a>  <button id="copySale" style="text-align: center">Copy address</button></p>
+            <div style="text-align: center" id="saleqr"></div>
+    </div>
+    <hr>
+    
+    <div style="text-align: center">
+        <h1>Referral program</h1>
+        <p>Share your referral link and get paid instantly to your wallet for every referred token purchase.</p>
+        <p>Total paid to referrers: <span id="refTotal"></span> MATIC</p>
+        <p>Referral commission: <span id="refPercent">10</span>%</p>
+        <p>Your referral earnings: <span id="refMy"></span> MATIC</p>
+        
+        <p>Share your referral link or QR code and get commission for referred token purchases instantly to your wallet.</p>
+        <p><input type="text" id="referLink" size="70" readonly="true"> <button id="copyreflink">Copy link</button></p>
+        <div id="refqrcode">
+            <div style="text-align: center" id="refqr"></div>
+        </div>
+        <p id="refErr" class="err" style="display: none">Please connect your wallet on Polygon (MATIC) to generate your referral link!</p>
+    </div>
+    
+<script src='https://dappbuilder.org/js/jquery-3.6.0.min.js' type="text/javascript" charset="utf-8"></script>
+<script src='https://dappbuilder.org/js/ethers-5.0.umd.min.js' type="text/javascript" charset="utf-8"></script>
+<script src='https://dappbuilder.org/matic/tokensaleclaimtimeref/js/tokensale.ui.js' type="text/javascript" charset="utf-8"></script>
+
+</body>
+</html>
